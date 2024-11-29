@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:presence_air_app/models/agendamento.dart';
 import 'package:presence_air_app/services/agendamentos_service.dart';
@@ -25,6 +26,10 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
   late TextEditingController _descricaoController;
   late TextEditingController _tipoController;
   late TextEditingController _reservadoPorController;
+
+  DateTime? _inicioDateTime;
+  DateTime? _fimDateTime;
+
   bool _statusArCondicionado = false;
 
   final AgendamentosService service = AgendamentosService();
@@ -33,7 +38,6 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicializando os controladores com os valores do agendamento
     _atividadeController =
         TextEditingController(text: widget.agendamento.usuarioAtividade);
     _areaController = TextEditingController(text: widget.agendamento.area);
@@ -47,12 +51,16 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     _tipoController = TextEditingController(text: widget.agendamento.tipo);
     _reservadoPorController =
         TextEditingController(text: widget.agendamento.reservadoPor);
+
     _statusArCondicionado = widget.agendamento.statusArcondicionado ?? false;
+
+    // Converte os valores iniciais de início e fim para DateTime
+    _inicioDateTime = DateTime.tryParse(widget.agendamento.inicio ?? '');
+    _fimDateTime = DateTime.tryParse(widget.agendamento.fim ?? '');
   }
 
   @override
   void dispose() {
-    // Limpando os controladores
     _atividadeController.dispose();
     _areaController.dispose();
     _salaController.dispose();
@@ -63,6 +71,61 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     _tipoController.dispose();
     _reservadoPorController.dispose();
     super.dispose();
+  }
+
+  void _calcularDuracao() {
+    if (_inicioDateTime != null && _fimDateTime != null) {
+      final duration = _fimDateTime!.difference(_inicioDateTime!).inMinutes / 60;
+      setState(() {
+        _duracaoController.text = duration.toStringAsFixed(2);
+      });
+    }
+  }
+
+  Future<void> _selectDateTime(TextEditingController controller, bool isInicio) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+
+    if (pickedDate != null) {
+      TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        final DateTime fullDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        setState(() {
+          if (isInicio) {
+            _inicioDateTime = fullDateTime;
+            _inicioController.text =
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
+          } else {
+            _fimDateTime = fullDateTime;
+            _fimController.text =
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
+          }
+        });
+
+        _calcularDuracao();
+      }
+    }
   }
 
   void _salvarEdicao() async {
@@ -83,13 +146,11 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
             widget.agendamento.id!, widget.agendamento);
 
         if (response) {
-          Navigator.pop(
-            context,
-          );
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Não foi possivel salvar Agendamento!')),
+                content: Text('Não foi possível salvar o agendamento!')),
           );
         }
       } catch (e) {
@@ -112,83 +173,25 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _atividadeController,
-                decoration: const InputDecoration(labelText: 'Atividade'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _areaController,
-                decoration: const InputDecoration(labelText: 'Área'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _salaController,
-                decoration: const InputDecoration(labelText: 'Sala'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _inicioController,
-                decoration: const InputDecoration(labelText: 'Início'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _fimController,
-                decoration: const InputDecoration(labelText: 'Fim'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _duracaoController,
-                decoration: const InputDecoration(labelText: 'Duração (horas)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Campo obrigatório';
-                  if (double.tryParse(value) == null)
-                    return 'Digite um número válido';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descricaoController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _tipoController,
-                decoration: const InputDecoration(labelText: 'Tipo'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _reservadoPorController,
-                decoration: const InputDecoration(labelText: 'Reservado por'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Campo obrigatório' : null,
-              ),
-              const SizedBox(height: 12),
+              _buildTextField('Atividade', _atividadeController, true),
+              _buildTextField('Área', _areaController, true),
+              _buildTextField('Sala', _salaController, true),
+              _buildDateTimePicker('Início', _inicioController, true),
+              _buildDateTimePicker('Fim', _fimController, false),
+              _buildTextField('Duração (horas)', _duracaoController, false,
+                  isNumber: true),
+              _buildTextField('Descrição', _descricaoController, false),
+              _buildTextField('Tipo', _tipoController, true),
+              _buildTextField('Reservado por', _reservadoPorController, true),
               SwitchListTile(
                 title: const Text('Status Ar Condicionado'),
                 value: _statusArCondicionado,
-                onChanged: (bool value) {
+                onChanged: (value) {
                   setState(() {
                     _statusArCondicionado = value;
                   });
                 },
               ),
-              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _salvarEdicao,
                 style: ElevatedButton.styleFrom(
@@ -204,6 +207,32 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller,
+      bool isRequired,
+      {bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      validator: isRequired
+          ? (value) =>
+              value == null || value.isEmpty ? 'Campo obrigatório' : null
+          : null,
+    );
+  }
+
+  Widget _buildDateTimePicker(
+      String label, TextEditingController controller, bool isInicio) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(labelText: label),
+      onTap: () => _selectDateTime(controller, isInicio),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Campo obrigatório' : null,
     );
   }
 }

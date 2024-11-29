@@ -207,7 +207,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
                   SizedBox(
                     child: ElevatedButton(
                         onPressed: _adicionarLinha,
-                        child: Text("Adicionar Linha")),
+                        child: Text("Adicionar Agendamento")),
                   ),
                   Row(
                     children: [

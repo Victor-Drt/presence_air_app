@@ -17,6 +17,10 @@ class AgendamentosService {
 
   Future<bool> cadastrarAgendamento(Agendamento agendamento) async {
     try {
+
+      logger.d(agendamento.inicio);
+      logger.d(agendamento.fim);
+
       final url = Uri.parse('$baseUrl/reservas');
 
       final DateTime now = DateTime.now();

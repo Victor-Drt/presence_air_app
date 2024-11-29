@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Para formatar a data
 import 'package:presence_air_app/models/agendamento.dart';
 import 'package:presence_air_app/services/agendamentos_service.dart';
 
@@ -29,6 +30,9 @@ class _AgendamentoCadastrarScreenState
 
   final service = AgendamentosService();
 
+  DateTime? _inicioDateTime;
+  DateTime? _fimDateTime;
+
   @override
   void dispose() {
     // Limpa os controladores quando o widget for destruído
@@ -42,6 +46,72 @@ class _AgendamentoCadastrarScreenState
     _reservadoPorController.dispose();
     _duracaoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDateTime(
+      TextEditingController controller, bool isInicio) async {
+    // Escolhendo a data
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+
+    if (pickedDate != null) {
+      // Escolhendo o horário
+      TimeOfDay? pickedTime = await showTimePicker(
+        initialEntryMode: TimePickerEntryMode.dialOnly,
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        final DateTime fullDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        setState(() {
+          if (isInicio) {
+            _inicioDateTime = fullDateTime;
+            _inicioController.text =
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
+          } else {
+            _fimDateTime = fullDateTime;
+            _fimController.text =
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
+          }
+        });
+
+        // Calcular a duração se ambas as datas (início e fim) estiverem preenchidas
+        if (_inicioDateTime != null && _fimDateTime != null) {
+          _calcularDuracao();
+        }
+      }
+    }
+  }
+
+  // Função para calcular a duração em horas
+  void _calcularDuracao() {
+    if (_inicioDateTime != null && _fimDateTime != null) {
+      final difference = _fimDateTime!.difference(_inicioDateTime!);
+      final duracaoHoras =
+          difference.inHours + (difference.inMinutes % 60) / 60;
+      setState(() {
+        _duracaoController.text =
+            duracaoHoras.toStringAsFixed(2); // Exibindo a duração em horas
+      });
+    }
   }
 
   // Função para cadastrar o agendamento
@@ -71,12 +141,13 @@ class _AgendamentoCadastrarScreenState
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Não foi possivel salvar Agendamento!')),
+                content: Text('Não foi possível salvar o Agendamento!')),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possivel salvar Agendamento!')),
+          const SnackBar(
+              content: Text('Não foi possível salvar o Agendamento!')),
         );
       }
     }
@@ -153,6 +224,8 @@ class _AgendamentoCadastrarScreenState
                   labelText: 'Data de Início',
                   border: OutlineInputBorder(),
                 ),
+                readOnly: true,
+                onTap: () => _selectDateTime(_inicioController, true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira a data de início';
@@ -169,6 +242,8 @@ class _AgendamentoCadastrarScreenState
                   labelText: 'Data de Fim',
                   border: OutlineInputBorder(),
                 ),
+                readOnly: true,
+                onTap: () => _selectDateTime(_fimController, false),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, insira a data de fim';
@@ -185,6 +260,7 @@ class _AgendamentoCadastrarScreenState
                   labelText: 'Duração (horas)',
                   border: OutlineInputBorder(),
                 ),
+                readOnly: true, // Duração é calculada automaticamente
               ),
               const SizedBox(height: 12),
 
