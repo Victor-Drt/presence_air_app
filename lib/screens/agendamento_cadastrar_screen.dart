@@ -3,6 +3,34 @@ import 'package:intl/intl.dart'; // Para formatar a data
 import 'package:presence_air_app/models/agendamento.dart';
 import 'package:presence_air_app/services/agendamentos_service.dart';
 
+List<String> salas = [
+  "Comunicações Ópticas",
+  "Lab. Programação I",
+  "Lab. Programação IV",
+  "MPCE",
+  "Lab. Programação II",
+  "Lab. Programação III",
+  "Redes de Telecomunicações",
+  "Sistemas de Telecom",
+  "Indústria I",
+  "Indústria II",
+  "Indústria III",
+  "Lab. FINEP",
+  "Lab. FLL",
+  "Lab. Prototipagem",
+  "Laboratório de Biologia",
+  "Laboratório de Desenho",
+  "Laboratório de Eletrônica de Potência",
+  "Lab. Robótica e Controle",
+  "Lab. de Acionamentos/ CLP",
+  "Lab. Hidrául./ Pneumática",
+  "Lab. Metrologia",
+  "Áudio e Vídeo",
+  "Lab. de Automação",
+  "Lab. de Física",
+  "Lab. de Química",
+];
+
 class AgendamentoCadastrarScreen extends StatefulWidget {
   const AgendamentoCadastrarScreen({super.key});
 
@@ -18,7 +46,7 @@ class _AgendamentoCadastrarScreenState
   // Controladores para os campos de texto
   final TextEditingController _atividadeController = TextEditingController();
   final TextEditingController _areaController = TextEditingController();
-  final TextEditingController _salaController = TextEditingController();
+  // final TextEditingController _salaController = TextEditingController();
   final TextEditingController _inicioController = TextEditingController();
   final TextEditingController _fimController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
@@ -38,7 +66,7 @@ class _AgendamentoCadastrarScreenState
     // Limpa os controladores quando o widget for destruído
     _atividadeController.dispose();
     _areaController.dispose();
-    _salaController.dispose();
+    // _salaController.dispose();
     _inicioController.dispose();
     _fimController.dispose();
     _descricaoController.dispose();
@@ -120,7 +148,8 @@ class _AgendamentoCadastrarScreenState
       Agendamento novoAgendamento = Agendamento(
           usuarioAtividade: _atividadeController.text,
           area: _areaController.text,
-          sala: _salaController.text,
+          // sala: _salaController.text,
+          sala: dropdownValue,
           inicio: _inicioController.text,
           fim: _fimController.text,
           duracao: double.parse(_duracaoController.text),
@@ -152,6 +181,8 @@ class _AgendamentoCadastrarScreenState
       }
     }
   }
+
+  String dropdownValue = salas.first;
 
   @override
   Widget build(BuildContext context) {
@@ -202,22 +233,27 @@ class _AgendamentoCadastrarScreenState
               const SizedBox(height: 12),
 
               // Campo de Sala
-              TextFormField(
-                controller: _salaController,
-                decoration: const InputDecoration(
-                  labelText: 'Sala',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira a sala';
-                  }
-                  return null;
-                },
-              ),
+              DropdownButton(
+                  value: dropdownValue,
+                  icon: const Icon(Icons.arrow_downward),
+                  elevation: 16,
+                  style: const TextStyle(color: Colors.black),
+                  underline: Container(
+                    height: 2,
+                    color: Colors.green,
+                  ),
+                  onChanged: (String? value) {
+                    setState(() {
+                      dropdownValue = value!;
+                    });
+                  },
+                  items: salas.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList()),
               const SizedBox(height: 12),
-
-              // Campo de Data Início
               TextFormField(
                 controller: _inicioController,
                 decoration: const InputDecoration(

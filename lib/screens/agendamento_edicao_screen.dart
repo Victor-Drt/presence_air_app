@@ -4,6 +4,34 @@ import 'package:logger/logger.dart';
 import 'package:presence_air_app/models/agendamento.dart';
 import 'package:presence_air_app/services/agendamentos_service.dart';
 
+List<String> salas = [
+  "Comunicações Ópticas",
+  "Lab. Programação I",
+  "Lab. Programação IV",
+  "MPCE",
+  "Lab. Programação II",
+  "Lab. Programação III",
+  "Redes de Telecomunicações",
+  "Sistemas de Telecom",
+  "Indústria I",
+  "Indústria II",
+  "Indústria III",
+  "Lab. FINEP",
+  "Lab. FLL",
+  "Lab. Prototipagem",
+  "Laboratório de Biologia",
+  "Laboratório de Desenho",
+  "Laboratório de Eletrônica de Potência",
+  "Lab. Robótica e Controle",
+  "Lab. de Acionamentos/ CLP",
+  "Lab. Hidrául./ Pneumática",
+  "Lab. Metrologia",
+  "Áudio e Vídeo",
+  "Lab. de Automação",
+  "Lab. de Física",
+  "Lab. de Química",
+];
+
 class AgendamentoEdicaoScreen extends StatefulWidget {
   final Agendamento agendamento;
 
@@ -34,6 +62,7 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
 
   final AgendamentosService service = AgendamentosService();
   var logger = Logger();
+  String dropdownValue = salas.first;
 
   @override
   void initState() {
@@ -41,7 +70,7 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     _atividadeController =
         TextEditingController(text: widget.agendamento.usuarioAtividade);
     _areaController = TextEditingController(text: widget.agendamento.area);
-    _salaController = TextEditingController(text: widget.agendamento.sala);
+    // _salaController = TextEditingController(text: widget.agendamento.sala);
     _inicioController = TextEditingController(text: widget.agendamento.inicio);
     _fimController = TextEditingController(text: widget.agendamento.fim);
     _duracaoController = TextEditingController(
@@ -57,13 +86,16 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     // Converte os valores iniciais de início e fim para DateTime
     _inicioDateTime = DateTime.tryParse(widget.agendamento.inicio ?? '');
     _fimDateTime = DateTime.tryParse(widget.agendamento.fim ?? '');
+
+    dropdownValue = salas.firstWhere((e) => e == widget.agendamento.sala);
+
   }
 
   @override
   void dispose() {
     _atividadeController.dispose();
     _areaController.dispose();
-    _salaController.dispose();
+    // _salaController.dispose();
     _inicioController.dispose();
     _fimController.dispose();
     _duracaoController.dispose();
@@ -75,14 +107,16 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
 
   void _calcularDuracao() {
     if (_inicioDateTime != null && _fimDateTime != null) {
-      final duration = _fimDateTime!.difference(_inicioDateTime!).inMinutes / 60;
+      final duration =
+          _fimDateTime!.difference(_inicioDateTime!).inMinutes / 60;
       setState(() {
         _duracaoController.text = duration.toStringAsFixed(2);
       });
     }
   }
 
-  Future<void> _selectDateTime(TextEditingController controller, bool isInicio) async {
+  Future<void> _selectDateTime(
+      TextEditingController controller, bool isInicio) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -132,7 +166,9 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     if (_formKey.currentState!.validate()) {
       widget.agendamento.usuarioAtividade = _atividadeController.text;
       widget.agendamento.area = _areaController.text;
-      widget.agendamento.sala = _salaController.text;
+      widget.agendamento.sala = dropdownValue;
+      // widget.agendamento.inicio = _inicioController.text;
+      // widget.agendamento.fim = _fimController.text;
       widget.agendamento.inicio = _inicioController.text;
       widget.agendamento.fim = _fimController.text;
       widget.agendamento.duracao = double.tryParse(_duracaoController.text);
@@ -175,7 +211,28 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
             children: [
               _buildTextField('Atividade', _atividadeController, true),
               _buildTextField('Área', _areaController, true),
-              _buildTextField('Sala', _salaController, true),
+              DropdownButton(
+                  value: dropdownValue,
+                  icon: const Icon(Icons.arrow_downward),
+                  elevation: 16,
+                  style: const TextStyle(color: Colors.black),
+                  underline: Container(
+                    height: 2,
+                    color: Colors.green,
+                  ),
+                  onChanged: (String? value) {
+                    setState(() {
+                      dropdownValue = value!;
+                    });
+                  },
+                  items: salas.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList()),
+
+              // _buildTextField('Sala', _salaController, true),
               _buildDateTimePicker('Início', _inicioController, true),
               _buildDateTimePicker('Fim', _fimController, false),
               _buildTextField('Duração (horas)', _duracaoController, false,
@@ -210,8 +267,8 @@ class _AgendamentoEdicaoScreenState extends State<AgendamentoEdicaoScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      bool isRequired,
+  Widget _buildTextField(
+      String label, TextEditingController controller, bool isRequired,
       {bool isNumber = false}) {
     return TextFormField(
       controller: controller,

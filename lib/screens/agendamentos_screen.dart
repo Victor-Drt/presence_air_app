@@ -153,6 +153,12 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     return filteredAgendamentos.map((agendamento) {
       return DataRow(
         cells: <DataCell>[
+          DataCell(Icon(
+            Icons.fiber_manual_record_rounded,
+            color:
+                agendamento.statusArcondicionado! ? Colors.green : Colors.red,
+          )),
+
           // DataCell(Text(agendamento.id?.toString() ?? '')),
           DataCell(Text(agendamento.usuarioAtividade ?? ''),
               onTap: () => _abrirDetalhes(agendamento)),
@@ -165,11 +171,6 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
           DataCell(Text(agendamento.tipo ?? '')),
           // DataCell(Text(agendamento.reservadoPor ?? '')),
           // DataCell(Text(agendamento.ultimaAtualizacao ?? '')),
-          DataCell(Icon(
-            Icons.fiber_manual_record_rounded,
-            color:
-                agendamento.statusArcondicionado! ? Colors.green : Colors.red,
-          )),
           // DataCell(
           //     Text(agendamento.statusArcondicionado == true ? 'Sim' : 'Não')),
           DataCell(
@@ -276,6 +277,9 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
                         //     label: Text('ID',
                         //         style: TextStyle(fontStyle: FontStyle.italic))),
                         DataColumn(
+                            label: Text('Status Ar',
+                                style: TextStyle(fontStyle: FontStyle.italic))),
+                        DataColumn(
                             label: Text('Usuário / Atividade',
                                 style: TextStyle(fontStyle: FontStyle.italic))),
                         DataColumn(
@@ -305,9 +309,6 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
                         // DataColumn(
                         //     label: Text('Última Atualização',
                         //         style: TextStyle(fontStyle: FontStyle.italic))),
-                        DataColumn(
-                            label: Text('Status Ar',
-                                style: TextStyle(fontStyle: FontStyle.italic))),
                         DataColumn(
                             label: Text('Ação',
                                 style: TextStyle(fontStyle: FontStyle.italic))),
