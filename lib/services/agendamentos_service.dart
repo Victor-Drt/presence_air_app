@@ -17,7 +17,6 @@ class AgendamentosService {
 
   Future<bool> cadastrarAgendamento(Agendamento agendamento) async {
     try {
-
       logger.d(agendamento.inicio);
       logger.d(agendamento.fim);
 
@@ -137,6 +136,37 @@ class AgendamentosService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((json) => Agendamento.fromJson(json)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      logger.e(e);
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> listarTempoDeUso({
+    required startDate,
+    required endDate,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/reservas/consumo?p1=$startDate&p2=$endDate'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Decodifica a resposta JSON
+        final List<dynamic> data = jsonDecode(response.body);
+
+        List<Map<String, dynamic>> tempoDeUso = [];
+        for (var item in data) {
+          tempoDeUso.add(Map<String, dynamic>.from(item));
+        }
+
+        return tempoDeUso;
       } else {
         return [];
       }

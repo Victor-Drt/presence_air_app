@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:presence_air_app/screens/agendamentos_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:presence_air_app/screens/importacao_agendamentos_screen.dart';
+import 'package:presence_air_app/screens/tempo_ar_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,8 +79,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               title: const Row(
                 children: [
-                  Icon(Icons.notifications_none_outlined),
-                  Text("Notificações")
+                  Icon(Icons.equalizer_outlined),
+                  Text("Tempo de Uso")
                 ],
               ),
               onTap: () {
@@ -87,10 +88,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Placeholder(),
+                      builder: (context) => TempoArScreen(),
                     ));
               },
             ),
+            // ListTile(
+            //   title: const Row(
+            //     children: [
+            //       Icon(Icons.notifications_none_outlined),
+            //       Text("Notificações")
+            //     ],
+            //   ),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     Navigator.push(
+            //         context,
+            //         MaterialPageRoute(
+            //           builder: (context) => Placeholder(),
+            //         ));
+            //   },
+            // ),
             ListTile(
               title: const Row(
                 children: [Icon(Icons.logout_outlined), Text("Sair")],
